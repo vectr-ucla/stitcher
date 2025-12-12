@@ -1,0 +1,32 @@
+<launch>
+    <!-- STITCHER -->
+	<node name="stitcher_planner" pkg="stitcher_planner" type="goal_click_node" output="screen" clear_params="true">
+    
+    <!-- Load parameters -->
+    <rosparam file="$(find stitcher_planner)/cfg/params.yaml" command="load"/>
+    
+    <!-- <param name="pcd_file" value="$(find stitcher_planner)/data/office.pcd"/> -->
+    <param name="pcd_file" value="$(find stitcher_planner)/data/perlin_map.pcd"/>
+
+    <!-- Publications -->
+    <remap from="~cloud" to="cloud"/>
+    <remap from="~start_end_state" to ="start_end_state"/>
+    <remap from="~waypoint_path" to="waypoint_path"/>
+    <remap from="~waypoints" to="waypoints"/>
+    <remap from="~bubbles" to="bubbles"/>
+
+    <remap from="~stitcher_trajectory" to="stitcher_trajectory"/>
+    <remap from="~colored_stitcher_trajectory" to="colored_stitcher_trajectory"/>
+
+    <remap from="~heuristic_dp_trajectory" to="heuristic_dp_trajectory"/>
+    <remap from="~dynamic_program_all_primitives" to="dynamic_program_all_primitives"/>
+
+    <!-- Subscriptions -->
+    <remap from="~move_base_simple/goal" to="/move_base_simple/goal"/>
+    
+  </node>
+
+  <!-- RViz -->
+  <node pkg="rviz" type="rviz" name="stitcher_rviz" args="-d $(find stitcher_planner)/launch/goal_click_sim.rviz"/>
+  
+</launch>

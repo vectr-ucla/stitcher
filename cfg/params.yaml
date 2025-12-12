@@ -1,0 +1,40 @@
+Robot:
+  thrust_max: 15. #N max total thrust (4*motor thrust max) equiv to fmax 18.75 m/s^2 mass normalized by 0.8kg 
+  thrust_min: 0.65 #N min total thrust (4*motor thrust min) equiv to 0.85 m/s^2 mass normalized by 0.8kg 
+  omega_max: 6 # rad/s max angular velocity
+  theta_max: 1. # rad max tilt acos(mg/Tmax), this will influence your fxy_max
+  mass: 0.8 #kg
+  grav: 9.8 #m/s^2
+  arm_length: 0.125 #m distance between center of quadrotor and rotor blade 
+  drag: 0.2 #propeller drag coefficient for quadrotor
+  motor_thrust_max: 3.75 #N per motor 
+  motor_thrust_min: 0.163 #N per motor
+  Jxx: 0.01 #moment of inertia of quadrotor
+  Jyy: 0.01
+  Jzz: 0.01
+
+Primitives:
+  vf_zenith: [90.] # sampled zenith angles in degrees
+  vf_azimuth: [-10., 0., 10.] # sampled azimuth angles in degrees
+  vf_magnitude: [0.25, 0.5, 0.75, 1.] # sampled magnitudes as fraction of v_max, increase number of magnitudes for denser sampling
+  v_max: 10.
+  # for admissible heuristic need to ensure that MinTimePrims have accel bounds that maximally bound thrust limits
+  a_max: 15.8 # calculated by mass norm thrust in xy minus grav: fxy_max - g
+  az_max: 9.  # calculated by mass norm thrust in xy minus grav: fz_max - g
+  j_max: 60.  
+  rho: 1000. # weighting on time in cost function for primitive generation
+
+Planner:
+  map_collision_buffer: 0.15
+  collision_check: true # turn on if you want to collision check
+  verbose: false
+
+GeometricPlanner:
+  geometric_planner_type: "jps"  # astar or jps (default jps)
+  resolution: 0.15 #for office environment need smaller resolution like 0.1 or 0.15 to fit through doorways
+  map_ub: [29, 29, 30] # these will update after running A* based on the map
+  map_lb: [-29, -29, 0] 
+  max_dist_btwn_wps: 12.5 # max distance between waypoints
+
+
+  
