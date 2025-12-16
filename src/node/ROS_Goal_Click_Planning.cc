@@ -85,6 +85,7 @@ void Motion_Primitives::RosNode::LocalPlanner::Start() {
   time_params.verbose = this->params.verbose;
   time_params.v_max = this->params.v_max;
   time_params.a_max = this->params.a_max;
+  time_params.az_max = this->params.az_max;
   time_params.j_max = this->params.j_max;
   time_params.map_ub = this->params.map_ub;
   time_params.map_lb = this->params.map_lb;
@@ -637,9 +638,10 @@ void Motion_Primitives::RosNode::LocalPlanner::saveStates(const std::vector<Prim
 }
 
 void Motion_Primitives::RosNode::LocalPlanner::getParams() {
-  ros::param::param<double>("~Primitives/v_max", this->params.v_max, 5.);
-  ros::param::param<double>("~Primitives/a_max", this->params.a_max, 2.);
-  ros::param::param<double>("~Primitives/j_max", this->params.j_max, 2.);
+  ros::param::param<double>("~Primitives/v_max", this->params.v_max, 10.);
+  ros::param::param<double>("~Primitives/a_max", this->params.a_max, 10.);
+  ros::param::param<double>("~Primitives/az_max", this->params.az_max, 10.);
+  ros::param::param<double>("~Primitives/j_max", this->params.j_max, 60.);
   ros::param::param<double>("~Primitives/rho", this->params.rho, 500.);
   ros::param::param<std::vector<double>>("~Primitives/vf_zenith", this->params.vf_zenith, {});
   ros::param::param<std::vector<double>>("~Primitives/vf_magnitude", this->params.vf_magnitude, {});
