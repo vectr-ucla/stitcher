@@ -1,16 +1,16 @@
 <?xml version="1.0"?>
 <package format="2">
   <name>stitcher_planner</name>
-  <version>0.0.0</version>
-  <description>The stitcher_planner package</description>
+  <version>1.0.0</version>
+  <description>STITCHER: Real-Time Trajectory Planning with Motion Primitive Search</description>
 
-  <maintainer email="hjlevy@ucla.edu">helene</maintainer>
+  <maintainer email="hjlevy@ucla.edu">Helene J. Levy</maintainer>
+  <maintainer email="btlopez@ucla.edu">Brett T. Lopez</maintainer>
 
+  <author>Helene J. Levy</author>
+  <author>Brett T. Lopez</author>
 
-  <!-- One license tag required, multiple allowed, one license per tag -->
-  <!-- Commonly used license strings: -->
-  <!--   BSD, MIT, Boost Software License, GPLv2, GPLv3, LGPLv2.1, LGPLv3 -->
-  <license>TODO</license>
+  <license>MIT</license>
 
   <depend>roscpp</depend>
   <depend>std_msgs</depend>
@@ -20,9 +20,7 @@
   <depend>pcl_ros</depend>
   <buildtool_depend>catkin</buildtool_depend>
 
-  <!-- The export tag contains other, unspecified, tags -->
   <export>
-    <!-- Other tools can request additional information be placed here -->
-
   </export>
+
 </package>
