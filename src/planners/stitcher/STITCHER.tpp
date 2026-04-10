@@ -132,12 +132,13 @@ void Motion_Primitives::STITCHER<MotionPrimitiveType>::buildEndStateMenu(int num
 template <typename MotionPrimitiveType>
 void Motion_Primitives::STITCHER<MotionPrimitiveType>::planPath(Eigen::MatrixXd start_state, Eigen::VectorXd goal, std::vector<Eigen::Vector3d> & reference_waypoints) {
   auto begin = std::chrono::high_resolution_clock::now();
-  
+
   int num_waypoints = reference_waypoints.size();
   if(this->verbose){std::cout << "Number of waypoints: " << num_waypoints << std::endl;}
   Reinitialize(num_waypoints);
 
   //save goal and waypoints
+  this->start_pos = start_state.row(0).transpose();
   this->goal = goal;
   this->waypoints = reference_waypoints;
   
@@ -241,7 +242,6 @@ void Motion_Primitives::STITCHER<MotionPrimitiveType>::planPath(Eigen::MatrixXd 
   std::cout << "Total planning time: " << this->planning_time << std::endl;
   std::cout << "-------------------------------\n";
   }
-
   //deallocate all nodes 
   for (auto &node_pair : open_map) {
     delete node_pair.second;
@@ -359,58 +359,88 @@ double Motion_Primitives::STITCHER<MotionPrimitiveType>::collisionCheckWithBubbl
     this->safe_bubble_map_generated(waypoint_id) = 1;
   } 
   else{
-    //use safe bubble map for collision checking
-    Eigen::MatrixXd safe_bubble_centers = this->safe_bubble_map[waypoint_id].leftCols(3);
-    Eigen::VectorXd safe_bubble_radii = this->safe_bubble_map[waypoint_id].col(3);
+    if (!this->occupancyCloudReady()){
+      collisions = -1;
+    } else {
+      //use safe bubble map for collision checking
+      double t = 0.;
+      bool check_horizon = false;
+      double last_time = 0.;
+      bool used_vanilla = false;
+      const double tol = 1e-2;
 
-    double t = 0.;
-    bool check_horizon = false;
-    double last_time = 0.;
-    while (t <= primitive.horizon && !check_horizon){
-      if (t == primitive.horizon){
-        check_horizon = true; //check one last time at horizon
-      }
-
-      Eigen::Vector3d pos = primitive.getPos(t);
-      Eigen::VectorXd dist_to_centers = (safe_bubble_centers.rowwise() - pos.transpose()).rowwise().norm();
-  
-      int min_index;
-      double circle_check = (dist_to_centers.array() - (safe_bubble_radii.array()-this->params.map_buffer)).minCoeff(&min_index);
-      double min_dist = dist_to_centers(min_index);
-
-      //if outside safe bubble, do vanilla collision check 
-      if(circle_check > 0){  
-        //append new spheres
-        std::vector<Eigen::Vector4d> safe_bubble_data;
-
-        //collision check and store the known safe bubbles
-        collisions = collisionCheckMap(primitive, this->params.map_buffer, safe_bubble_data, this->params.v_max);
-
-        //data management
-        int prev_num_bubbles = this->safe_bubble_map[waypoint_id].rows();
-        Eigen::MatrixXd new_safe_bubble_data(prev_num_bubbles + safe_bubble_data.size(), 4);
-        new_safe_bubble_data << this->safe_bubble_map[waypoint_id], Eigen::MatrixXd::Zero(safe_bubble_data.size(), 4);
-
-        for (int j = 0; j < safe_bubble_data.size(); j++){
-          new_safe_bubble_data.row(prev_num_bubbles + j) << safe_bubble_data[j].transpose();
+      while (t <= primitive.horizon && !check_horizon){
+        if (t == primitive.horizon){
+          check_horizon = true; //check one last time at horizon
         }
-        this->safe_bubble_map[waypoint_id] = new_safe_bubble_data;
 
-        this->bubble_counter++; //count how many times we had to do vanilla collision check
-        break;
-      }
+        Eigen::MatrixXd safe_bubble_centers = this->safe_bubble_map[waypoint_id].leftCols(3);
+        Eigen::VectorXd safe_bubble_radii = this->safe_bubble_map[waypoint_id].col(3);
 
-      //next time sample
-      last_time = t;
-      t += ((safe_bubble_radii(min_index)-this->params.map_buffer)-min_dist)/this->params.v_max;
+        Eigen::Vector3d pos = primitive.getPos(t);
+        Eigen::VectorXd dist_to_centers = (safe_bubble_centers.rowwise() - pos.transpose()).rowwise().norm();
+    
+        int min_index;
+        double circle_check = (dist_to_centers.array() - (safe_bubble_radii.array()-this->params.map_buffer)).minCoeff(&min_index);
+        double min_dist = dist_to_centers(min_index);
 
-      if (t - last_time < 0.001){
-        t = t + 0.0005;
-      }
+        //if outside safe bubble, do vanilla collision check 
+        if(circle_check > 0){
+          std::vector<Eigen::Vector4d> safe_bubble_data;
+          double t_before = t;
+          bool collision = this->advanceCollisionStep(primitive,
+                                                      this->params.map_buffer,
+                                                      this->occupancy_kdtree,
+                                                      this->params.v_max,
+                                                      tol,
+                                                      t,
+                                                      &safe_bubble_data); //receive next time sample here as t
 
-      //if t greater than horizon, set t to horizon
-      if (t > primitive.horizon){
-        t = primitive.horizon;
+          if (!used_vanilla) {
+            this->bubble_counter++; //count how many times we had to do vanilla collision check
+            used_vanilla = true;
+          }
+
+          if (collision) {
+            collisions = 1;
+            break;
+          }
+
+          //add new vanilla query info to safe bubbles
+          if (!safe_bubble_data.empty()) {
+            int prev_num_bubbles = this->safe_bubble_map[waypoint_id].rows();
+            Eigen::MatrixXd new_safe_bubble_data(prev_num_bubbles + safe_bubble_data.size(), 4);
+            new_safe_bubble_data << this->safe_bubble_map[waypoint_id], Eigen::MatrixXd::Zero(safe_bubble_data.size(), 4);
+
+            for (int j = 0; j < safe_bubble_data.size(); j++){
+              new_safe_bubble_data.row(prev_num_bubbles + j) << safe_bubble_data[j].transpose();
+            }
+            this->safe_bubble_map[waypoint_id] = new_safe_bubble_data;
+          }
+
+          if (t - t_before < 0.001){
+            t = t_before + 0.0005;
+          }
+
+          //if t greater than horizon, set t to horizon
+          if (t > primitive.horizon){
+            t = primitive.horizon;
+          }
+          continue;
+        }
+
+        //next time sample
+        last_time = t;
+        t += ((safe_bubble_radii(min_index)-this->params.map_buffer)-min_dist)/this->params.v_max;
+
+        if (t - last_time < 0.001){
+          t = t + 0.0005;
+        }
+
+        //if t greater than horizon, set t to horizon
+        if (t > primitive.horizon){
+          t = primitive.horizon;
+        }
       }
     }
 

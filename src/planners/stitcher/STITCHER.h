@@ -38,6 +38,7 @@ public:
     std::vector<MotionPrimitiveType> final_primitives;
     std::vector<Eigen::Vector3d> waypoints;
     Eigen::VectorXd goal;
+    Eigen::Vector3d start_pos;
 
     float execution_time;
     float planning_time;

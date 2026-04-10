@@ -73,6 +73,17 @@ public:
 
   pcl::KdTreeFLANN<pcl::PointXYZ> occupancy_kdtree;
 
+protected:
+  template <typename PrimitiveType>
+  bool advanceCollisionStep(const PrimitiveType& primitive,
+                            const double buffer,
+                            const pcl::KdTreeFLANN<pcl::PointXYZ>& kdtree,
+                            const double v_max,
+                            const double tol,
+                            double& t_star,
+                            std::vector<Eigen::Vector4d>* safe_bubble_data);
+  bool occupancyCloudReady() const { return set_occupancy_cloud; }
+
 private: 
   double distanceComparison(const Eigen::Vector3d current,
                             const Eigen::Vector3d primitive_pos,
