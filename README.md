@@ -70,15 +70,3 @@ Our framework was tested on hardware and shown to generate dynamically feasible 
 <p align='center'>
     <img src="./doc/stitcher_flight.gif" alt="drawing" width="720"/>
 </p>
-
-## Citation
-If you found this work useful, please cite our manuscript:
-
-```bibtex
-@article{Levy25:STITCHER,
-  author={Levy, Helene J. and Lopez, Brett T. },
-  journal={ArXiv}, 
-  title={STITCHER: Constrained trajectory planning in complex environments with real-time motion primitive search}, 
-  year={2025}
-}
-```
