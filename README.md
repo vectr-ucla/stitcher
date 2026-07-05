@@ -1,6 +1,5 @@
 # STITCHER: Constrained Trajectory Planning in Complex Environments with Real-Time Motion Primitive Search
 
-#### [[ArXiv](https://arxiv.org/pdf/2510.14893)] [[Code](https://github.com/vectr-ucla/stitcher.git)]
 <!-- #### [[ArXiv]()] [[Video]()] [[Code]()] -->
 
 STITCHER is an optimization-free trajectory planning framework that stitches together motion primitives (i.e. short trajectory segments) to compute long-range, expressive, and near-optimal trajectories in real time. STITCHER has provable performance with guaranteed hard constraint satisfaction and a priori time/memory bounds. The framework has been extensively tested in both simulation and hardware on a custom quadrotor. 
